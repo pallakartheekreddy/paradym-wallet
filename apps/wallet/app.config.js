@@ -20,8 +20,10 @@ const config = createBaseConfig({
   version,
   bundleId: 'id.paradym.wallet',
   additionalInvitationSchemes: ['didcomm'],
-  associatedDomains: ['paradym.id', 'dev.paradym.id', 'paradymwallet.app', '98.70.36.106.sslip.io'],
-  projectId: 'b5f457fa-bcab-4c6e-8092-8cdf1239027a',
+  associatedDomains: ['paradym.id', 'dev.paradym.id', 'paradymwallet.app'],
+  // Animo's EAS project id is deliberately not carried into this repository: it
+  // would point builds and OTA updates at their Expo project. The showcase builds
+  // locally, never through EAS.
   assets: ['./assets/paradym/icon.png'],
   extraConfig: {
     mediatorDid: mediatorDids[process.env.APP_VARIANT || 'production'],
@@ -37,7 +39,7 @@ const config = createBaseConfig({
     // locally signed certificate.
     allowedRedirectBaseUrls: (
       process.env.WALLET_REDIRECT_BASE_URLS ??
-      'https://98.70.36.106.sslip.io/wallet/redirect,https://paradym.id/invitation/redirect,https://paradymwallet.app/oauth2/redirect'
+      'https://paradym.id/invitation/redirect,https://paradymwallet.app/oauth2/redirect'
     )
       .split(',')
       .map((url) => url.trim())
@@ -48,6 +50,26 @@ const config = createBaseConfig({
       .split(',')
       .map((url) => url.trim())
       .filter(Boolean),
+    // The showcase deployment this build trusts, as JSON:
+    //
+    //   {"baseUrl":"https://host","verifierDids":{"age":"did:web:...","bank":"did:web:..."}}
+    //
+    // Deployment-specific values are supplied at BUILD TIME rather than pinned in
+    // src/constants.ts, because those DIDs carry the deployment's host and a uuid that
+    // changes on every re-bootstrap. Pinning them put a sandbox address into a public
+    // repository and went stale invisibly. Absent or unparseable yields no entries, which
+    // is correct for a build not pointed at a showcase.
+    showcaseDeployment: (() => {
+      const raw = process.env.SHOWCASE_DEPLOYMENT
+      if (!raw) return null
+      try {
+        return JSON.parse(raw)
+      } catch (error) {
+        // Failing loudly: a typo here silently produces a wallet that trusts nothing and
+        // names no organisation, which looks like a deployment fault rather than a build one.
+        throw new Error(`SHOWCASE_DEPLOYMENT is not valid JSON: ${error.message}`)
+      }
+    })(),
   },
 })
 

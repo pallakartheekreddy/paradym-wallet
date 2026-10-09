@@ -91,6 +91,14 @@ export function getSdJwtCredentialDisplay(
   // Type metadata takes precedence.
   if (typeMetadata) {
     credentialDisplay = getSdJwtTypeMetadataCredentialDisplay(typeMetadata)
+
+    // Type metadata often has no rendering; keep the issuer's colors and image rather than the black fallback
+    if (openId4VcMetadata) {
+      const openId4VcDisplay = getOpenId4VcCredentialDisplay(openId4VcMetadata)
+      credentialDisplay.textColor ??= openId4VcDisplay.textColor
+      credentialDisplay.backgroundColor ??= openId4VcDisplay.backgroundColor
+      credentialDisplay.backgroundImage ??= openId4VcDisplay.backgroundImage
+    }
   } else if (openId4VcMetadata) {
     credentialDisplay = getOpenId4VcCredentialDisplay(openId4VcMetadata)
   }
@@ -122,7 +130,8 @@ export function getAttributesAndMetadataForSdJwtPayload(
     exp?: number
     [key: string]: unknown
   }
-  const { _sd_alg, _sd_hash, iss, vct, cnf, iat, exp, nbf, status, ...visibleProperties } =
+  // `sub` and `jti` are JWT bookkeeping some issuers put in the payload, not card attributes
+  const { _sd_alg, _sd_hash, iss, vct, cnf, iat, exp, nbf, status, sub, jti, ...visibleProperties } =
     sdJwtVcPayload as SdJwtVcPayload
 
   const extraVcts = record?.typeMetadataChain?.slice(1).map((i) => i.vct)

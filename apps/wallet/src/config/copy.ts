@@ -6,13 +6,13 @@ export const copy = {
     description: defineMessage({
       id: 'paradymWallet.about.description',
       message:
-        'This app was created by Animo Solutions as a companion app for Sunbird Wallet. All code is available under Apache 2.0.',
-      comment: 'About screen description text for the Sunbird wallet',
+        'This app was created by Animo Solutions as a companion app for Institute Wallet. All code is available under Apache 2.0.',
+      comment: 'About screen description text for the Institute wallet',
     }),
     emailHeader: defineMessage({
       id: 'paradymWallet.about.emailHeader',
-      message: 'Reach out from Sunbird Wallet',
-      comment: 'Email subject when contacting support from Sunbird wallet',
+      message: 'Reach out from Institute Wallet',
+      comment: 'Email subject when contacting support from Institute wallet',
     }),
   },
 }

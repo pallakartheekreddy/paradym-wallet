@@ -18,6 +18,7 @@ import {
   YStack,
 } from '@package/ui'
 import { useRouter } from 'expo-router'
+import { useState } from 'react'
 import { buildCredentialOfferUri, type IssuerDirectoryIssuer, useCredentialIssuers } from './useCredentialIssuers'
 
 export function IssuerDirectoryScreen() {
@@ -26,6 +27,8 @@ export function IssuerDirectoryScreen() {
   const { withHaptics } = useHaptics()
   const { handleScroll, isScrolledByOffset, scrollEventThrottle } = useScrollViewPosition()
   const { issuers, isLoading } = useCredentialIssuers()
+  const [selectedIssuerUrl, setSelectedIssuerUrl] = useState<string | null>(null)
+  const selectedIssuer = issuers.find((issuer) => issuer.credentialIssuer === selectedIssuerUrl)
 
   const startIssuance = withHaptics((issuer: IssuerDirectoryIssuer, configurationId: string) => {
     const offerUri = buildCredentialOfferUri(issuer, configurationId)
@@ -37,11 +40,14 @@ export function IssuerDirectoryScreen() {
   return (
     <FlexPage gap="$0" paddingHorizontal="$0">
       <HeaderContainer
-        title={t({
-          id: 'issuers.title',
-          message: 'Get a card',
-          comment: 'Heading for the list of issuers the user can request a credential from',
-        })}
+        title={
+          selectedIssuer?.name ??
+          t({
+            id: 'issuers.title',
+            message: 'Get a card',
+            comment: 'Heading for the list of issuers the user can request a credential from',
+          })
+        }
         isScrolledByOffset={isScrolledByOffset}
       />
 
@@ -65,43 +71,57 @@ export function IssuerDirectoryScreen() {
         </AnimatedStack>
       ) : (
         <ScrollView px="$4" onScroll={handleScroll} scrollEventThrottle={scrollEventThrottle}>
-          <YStack gap="$5" pb="$4">
-            {issuers
-              .filter((issuer) => issuer.credentials.length > 0)
-              .map((issuer) => (
-                <AnimatedStack key={issuer.credentialIssuer} entering={fadeInUp()} flexDirection="column" gap="$3">
-                  <XStack ai="center" gap="$3">
-                    <Circle size="$4" bg="$grey-100">
-                      {issuer.logoUri ? (
-                        <Image src={issuer.logoUri} width={22} height={22} />
-                      ) : (
-                        <HeroIcons.BuildingOffice size={20} color="$grey-700" />
-                      )}
-                    </Circle>
-                    <Heading heading="sub1" numberOfLines={1} fg={1} f={1}>
-                      {issuer.name}
-                    </Heading>
-                  </XStack>
-                  <YStack gap="$2">
-                    {issuer.credentials.map((credential) => (
-                      <InfoButton
-                        key={credential.configurationId}
-                        noIcon
-                        title={credential.name}
-                        description={credential.description}
-                        badge={credential.format ? { label: credential.format } : undefined}
-                        onPress={() => startIssuance(issuer, credential.configurationId)}
-                      />
-                    ))}
-                  </YStack>
-                </AnimatedStack>
-              ))}
-          </YStack>
+          {selectedIssuer ? (
+            <AnimatedStack
+              key={selectedIssuer.credentialIssuer}
+              entering={fadeInUp()}
+              flexDirection="column"
+              gap="$3"
+              pb="$4"
+            >
+              <XStack ai="center" gap="$3">
+                <Circle size="$4" bg="$grey-100">
+                  {selectedIssuer.logoUri ? (
+                    <Image src={selectedIssuer.logoUri} width={22} height={22} />
+                  ) : (
+                    <HeroIcons.BuildingOffice size={20} color="$grey-700" />
+                  )}
+                </Circle>
+                <Heading heading="sub1" numberOfLines={1} fg={1} f={1}>
+                  {selectedIssuer.name}
+                </Heading>
+              </XStack>
+              <YStack gap="$2">
+                {selectedIssuer.credentials.map((credential) => (
+                  <InfoButton
+                    key={credential.configurationId}
+                    noIcon
+                    title={credential.name}
+                    onPress={() => startIssuance(selectedIssuer, credential.configurationId)}
+                  />
+                ))}
+              </YStack>
+            </AnimatedStack>
+          ) : (
+            <YStack gap="$2" pb="$4">
+              {issuers
+                .filter((issuer) => issuer.credentials.length > 0)
+                .map((issuer) => (
+                  <AnimatedStack key={issuer.credentialIssuer} entering={fadeInUp()}>
+                    <InfoButton
+                      noIcon
+                      title={issuer.name}
+                      onPress={withHaptics(() => setSelectedIssuerUrl(issuer.credentialIssuer))}
+                    />
+                  </AnimatedStack>
+                ))}
+            </YStack>
+          )}
         </ScrollView>
       )}
 
       <YStack btw="$0.5" borderColor="$grey-200" pt="$4" mx="$-4" px="$4" bg="$background">
-        <TextBackButton />
+        <TextBackButton onBack={selectedIssuer ? () => setSelectedIssuerUrl(null) : undefined} />
       </YStack>
     </FlexPage>
   )

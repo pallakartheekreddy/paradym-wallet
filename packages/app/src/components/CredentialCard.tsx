@@ -87,7 +87,7 @@ export function CredentialCard({
         <Card.Header p={0}>
           <XStack jc="space-between">
             <YStack f={1}>
-              <Paragraph fontSize={14} fontWeight="$bold" color={textColor} numberOfLines={1}>
+              <Paragraph fontSize={14} fontWeight="$bold" color={textColor} numberOfLines={2}>
                 {(name ?? 'TODO name').toLocaleUpperCase()}
               </Paragraph>
             </YStack>

@@ -8,7 +8,7 @@ const mediatorDids = {
 }
 
 const config = createBaseConfig({
-  name: 'Sunbird Wallet',
+  name: 'Institute Wallet',
   scheme: 'id.animo.paradym',
   icon: './assets/paradym/icon.png',
   // NOTE: android requires paths referenced directly in code

@@ -32,7 +32,7 @@ export function IssuerDirectoryScreen() {
 
   const startIssuance = withHaptics((issuer: IssuerDirectoryIssuer, configurationId: string) => {
     const offerUri = buildCredentialOfferUri(issuer, configurationId)
-    push(`/notifications/openIdCredential?uri=${encodeURIComponent(offerUri)}`)
+    push(`/notifications/openIdCredential?uri=${encodeURIComponent(offerUri)}&skipVerifyIssuer=true`)
   })
 
   const hasCredentials = issuers.some((issuer) => issuer.credentials.length > 0)

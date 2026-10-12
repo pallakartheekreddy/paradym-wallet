@@ -27,7 +27,7 @@ import { LoadingRequestSlide } from './slides/LoadingRequestSlide'
 import { TxCodeSlide } from './slides/TxCodeSlide'
 import { VerifyPartySlide } from './slides/VerifyPartySlide'
 
-type Query = { uri: string }
+type Query = { uri: string; skipVerifyIssuer?: string }
 
 export function CredentialNotificationScreen() {
   const { paradym } = useParadym('unlocked')
@@ -321,6 +321,10 @@ export function CredentialNotificationScreen() {
     )
   }
 
+  // Offers started from the issuer directory come from an issuer the user picked. Only the auth flow
+  // can skip: for pre-auth, the verify step's continue is what requests the credential.
+  const skipVerifyIssuer = params.skipVerifyIssuer === 'true' && resolvedCredentialOffer.flow === 'auth'
+
   return (
     <SlideWizard
       steps={[
@@ -331,29 +335,35 @@ export function CredentialNotificationScreen() {
             <LoadingRequestSlide key="loading-request" isLoading={!resolvedCredentialOffer} isError={!!errorReason} />
           ),
         },
-        {
-          step: 'verify-issuer',
-          progress: 33,
-          backIsCancel: true,
-          screen: (
-            <VerifyPartySlide
-              key="verify-issuer"
-              type="offer"
-              name={resolvedCredentialOffer.issuer.organizationName}
-              logo={{ url: resolvedCredentialOffer.issuer.logoUri, altText: resolvedCredentialOffer.issuer.entityId }}
-              entityId={resolvedCredentialOffer.issuer.entityId}
-              onContinue={
-                resolvedCredentialOffer.flow === 'pre-auth' || resolvedCredentialOffer.flow === 'pre-auth-with-tx-code'
-                  ? async () => {
-                      await acquireCredentialsPreAuth()
-                    }
-                  : undefined
-              }
-              trustMechanism={resolvedCredentialOffer.trustMechanism}
-              trustedEntities={resolvedCredentialOffer.trustedEntities}
-            />
-          ),
-        },
+        skipVerifyIssuer
+          ? undefined
+          : {
+              step: 'verify-issuer',
+              progress: 33,
+              backIsCancel: true,
+              screen: (
+                <VerifyPartySlide
+                  key="verify-issuer"
+                  type="offer"
+                  name={resolvedCredentialOffer.issuer.organizationName}
+                  logo={{
+                    url: resolvedCredentialOffer.issuer.logoUri,
+                    altText: resolvedCredentialOffer.issuer.entityId,
+                  }}
+                  entityId={resolvedCredentialOffer.issuer.entityId}
+                  onContinue={
+                    resolvedCredentialOffer.flow === 'pre-auth' ||
+                    resolvedCredentialOffer.flow === 'pre-auth-with-tx-code'
+                      ? async () => {
+                          await acquireCredentialsPreAuth()
+                        }
+                      : undefined
+                  }
+                  trustMechanism={resolvedCredentialOffer.trustMechanism}
+                  trustedEntities={resolvedCredentialOffer.trustedEntities}
+                />
+              ),
+            },
         resolvedCredentialOffer.flow === 'auth'
           ? {
               step: 'auth-code-flow',
